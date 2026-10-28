@@ -7,6 +7,9 @@ Takes 100 rows (all columns) from the newest "New USDOT carriers <start> to <end
 week, business-entity names only. Personal fields are partly masked in this free sample (officer -> initials,
 email -> domain, house numbers and the last 4 cell digits hidden); the paid file has them in full.
 Also rewrites the date line between the SAMPLE markers in README.md. Stdlib only.
+The sample ends with the same '# Source: ...' line as the paid CSV (build_newdot.py SOURCE_LINE); the weekly zip's own
+'#' line is dropped when reading, so it is never counted as a carrier. release.py (same Monday cron, after the push) turns
+the pushed sample into a GitHub Release.
 """
 import csv
 import io
@@ -21,6 +24,7 @@ DEFAULT_SRC = HERE.parents[1] / "ventures" / "15" / "products" / "new-usdot-regi
 SRC = Path(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("NEWDOT_ZIP_DIR", DEFAULT_SRC))
 OUT = HERE / "sample" / "new-usdot-carriers-sample.csv"
 N = 100
+SOURCE_LINE = "# Source: Rasengan Data, new USDOT carriers weekly, https://rasengan.win/new-dot-leads/?ref=csv"
 ENTITY = re.compile(r"\b(LLC|L\.?L\.?C|INC|CORP|CORPORATION|COMPANY|CO|LTD|LP|LLP|PLLC)\.?,?\s*$", re.I)
 
 
@@ -55,7 +59,7 @@ def main():
     with zipfile.ZipFile(path) as z:
         name = next(n for n in z.namelist() if n.lower().endswith(".csv"))
         reader = csv.DictReader(io.TextIOWrapper(z.open(name), encoding="utf-8-sig"))
-        cols, rows = reader.fieldnames, list(reader)
+        cols, rows = reader.fieldnames, [r for r in reader if not (r.get("USDOT Number") or "").startswith("#")]
     pool = [r for r in rows if ENTITY.search(r.get("Legal Name", "")) and r.get("Phone") and "@" in r.get("Email", "")] or rows
     step = max(len(pool) / N, 1)
     picked = [pool[int(i * step)] for i in range(min(N, len(pool)))]
@@ -70,6 +74,7 @@ def main():
         w = csv.DictWriter(f, fieldnames=cols)
         w.writeheader()
         w.writerows(picked)
+        f.write(SOURCE_LINE + "\r\n")          # last line, starts with '#': skipped by pandas comment='#'
     readme = HERE / "README.md"
     if readme.exists():
         line = f"<!--SAMPLE-->Current sample: {len(picked)} of the {len(rows):,} carriers registered {start} to {end}.<!--/SAMPLE-->"
