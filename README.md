@@ -2,7 +2,7 @@
 
 Every week about 1,800 trucking companies get a USDOT number from FMCSA (the Federal Motor Carrier Safety Administration). Our weekly file of new DOT leads is built every Monday: it has every carrier registered in the last 21 days that was not in an earlier file, so each carrier appears in one file only. This repository holds a free 100-row sample of that file, with every column the paid file has.
 
-<!--SAMPLE-->Current sample: 100 of the 2,972 carriers registered 2026-10-12 to 2026-10-31.<!--/SAMPLE-->
+<!--SAMPLE-->Current sample: 100 of the 2,874 carriers registered 2026-10-19 to 2026-11-07.<!--/SAMPLE-->
 
 File: [`sample/new-usdot-carriers-sample.csv`](sample/new-usdot-carriers-sample.csv). It opens in Excel or Google Sheets.
 
